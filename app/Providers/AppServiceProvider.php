@@ -21,8 +21,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Force HTTPS di production (penting untuk Railway)
-        // if (env('APP_ENV') === 'production') {
-        //     URL::forceScheme('https');
-        // }
+        if (env('APP_ENV') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
