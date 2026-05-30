@@ -12,7 +12,7 @@ use App\Http\Controllers\StatistikController;
 use App\Http\Controllers\SearchController;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return 'APP OK';
 });
 
 Route::middleware('guest')->group(function () {
