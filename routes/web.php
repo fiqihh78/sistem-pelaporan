@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\VerifikasiController;
@@ -12,7 +13,7 @@ use App\Http\Controllers\StatistikController;
 use App\Http\Controllers\SearchController;
 
 Route::get('/', function () {
-    return 'APP OK';
+    return redirect()->route('dashboard');
 });
 
 Route::middleware('guest')->group(function () {
@@ -22,7 +23,7 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', function (\Illuminate\Http\Request $request) {
         $credentials = $request->only('email', 'password');
-        if (auth()->attempt($credentials)) {
+        if (Auth::attempt($credentials)) {
             return redirect()->route('dashboard');
         }
         return back()->with('error', 'Email atau password salah!');
@@ -30,7 +31,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', function () {
-    auth()->logout();
+    Auth::logout();
     return redirect()->route('login');
 })->name('logout');
 
