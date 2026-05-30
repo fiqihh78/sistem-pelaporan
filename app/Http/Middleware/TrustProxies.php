@@ -7,8 +7,14 @@ use Illuminate\Http\Request;
 
 class TrustProxies extends Middleware
 {
+    /**
+     * Trust semua proxy Railway
+     */
     protected $proxies = '*';
 
+    /**
+     * Header proxy yang dipercaya
+     */
     protected $headers =
         Request::HEADER_X_FORWARDED_FOR |
         Request::HEADER_X_FORWARDED_HOST |
