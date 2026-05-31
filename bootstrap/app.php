@@ -14,9 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-        // ── Trust ALL proxies (wajib untuk Railway / Heroku / Render) ──
-        // Railway berada di balik reverse proxy, tanpa ini HTTPS terdeteksi
-        // sebagai HTTP sehingga secure cookie tidak terkirim → login loop.
         $middleware->trustProxies(at: '*');
 
     })
