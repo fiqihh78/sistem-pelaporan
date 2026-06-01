@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -16,7 +18,7 @@ class User extends Authenticatable
         'role',
         'phone',
         'address',
-        'avatar'
+        'avatar',
     ];
 
     protected $hidden = [
@@ -24,28 +26,21 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function petugas()
+    protected function casts(): array
     {
-        return $this->hasOne(Petugas::class);
+        return [
+            'email_verified_at' => 'datetime',
+            'password'          => 'hashed',
+        ];
     }
 
     public function laporans()
     {
-        return $this->hasMany(Laporan::class);
+        return $this->hasMany(Laporan::class, 'user_id');
     }
 
     public function notifikasis()
     {
-        return $this->hasMany(Notifikasi::class);
-    }
-
-    public function isAdmin()
-    {
-        return $this->role === 'admin';
-    }
-
-    public function isPetugas()
-    {
-        return $this->role === 'petugas';
+        return $this->hasMany(Notifikasi::class, 'user_id');
     }
 }
