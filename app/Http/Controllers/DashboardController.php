@@ -5,41 +5,50 @@ namespace App\Http\Controllers;
 use App\Models\Laporan;
 use App\Models\Petugas;
 use App\Models\Kategori;
-use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
-        // Grafik 7 hari terakhir
-        $labels = [];
-        $grafik_mingguan = [];
-        $grafik_selesai = [];
+        $totalLaporan  = Laporan::count();
+        $pending       = Laporan::where('status', 'pending')->count();
+        $diproses      = Laporan::where('status', 'diproses')->count();
+        $selesai       = Laporan::where('status', 'selesai')->count();
 
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $labels[] = $date->format('D d/m');
-            $grafik_mingguan[] = Laporan::whereDate('created_at', $date)->count();
-            $grafik_selesai[] = Laporan::whereDate('updated_at', $date)
-                                    ->where('status', 'selesai')->count();
-        }
+        // Gunakan 'penugasan' bukan 'petugas' (sesuai relasi di Model Laporan)
+        $laporanTerbaru = Laporan::with(['kategori', 'penugasan', 'user'])
+            ->latest()
+            ->take(5)
+            ->get();
 
-        $data = [
-            'total_laporan'        => Laporan::count(),
-            'pending'              => Laporan::where('status', 'pending')->count(),
-            'diproses'             => Laporan::where('status', 'diproses')->count(),
-            'selesai'              => Laporan::where('status', 'selesai')->count(),
-            'total_petugas'        => Petugas::count(),
-            'total_kategori'       => Kategori::count(),
-            'laporan_terbaru'      => Laporan::with(['user', 'kategori', 'petugas'])
-                                        ->latest()->take(5)->get(),
-            'laporan_per_kategori' => Kategori::withCount('laporans')->get(),
-            'grafik_mingguan'      => $grafik_mingguan,
-            'grafik_selesai'       => $grafik_selesai,
-            'grafik_labels'        => $labels,
-        ];
+        $perKategori = Kategori::withCount('laporans')->get()->map(fn($k) => [
+            'nama'   => $k->nama,
+            'jumlah' => $k->laporans_count,
+            'persen' => $totalLaporan > 0
+                ? round(($k->laporans_count / $totalLaporan) * 100)
+                : 0,
+        ]);
 
-        return view('dashboard.index', $data);
+        // Tren mingguan
+        $tren = Laporan::selectRaw('DAYOFWEEK(created_at) as hari, COUNT(*) as total')
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->groupBy('hari')
+            ->pluck('total', 'hari');
+
+        return view('dashboard', compact(
+            'totalLaporan',
+            'pending',
+            'diproses',
+            'selesai',
+            'laporanTerbaru',
+            'perKategori',
+            'tren'
+        ));
     }
 }
