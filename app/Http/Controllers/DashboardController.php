@@ -21,6 +21,9 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Alias untuk view yang pakai $recentLaporan
+        $recentLaporan = $laporanTerbaru;
+
         $perKategori = Kategori::withCount('laporans')->get()->map(fn($k) => [
             'nama'   => $k->nama,
             'jumlah' => $k->laporans_count,
@@ -41,6 +44,7 @@ class DashboardController extends Controller
             'selesai',
             'ditolak',
             'laporanTerbaru',
+            'recentLaporan',
             'perKategori',
             'tren'
         ));
