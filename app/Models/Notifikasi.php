@@ -13,13 +13,13 @@ class Notifikasi extends Model
         'judul',
         'pesan',
         'tipe',
-        'sudah_dibaca',
+        'dibaca',
         'laporan_id',
         'link',
     ];
 
     protected $casts = [
-        'sudah_dibaca' => 'boolean',
+        'dibaca' => 'boolean',
     ];
 
     public function user()
