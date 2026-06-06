@@ -45,16 +45,30 @@ class LaporanApiController extends Controller
         $kode = 'REP-' . strtoupper(Str::random(6));
 
         // Upload foto ke Cloudinary
+        // Upload ke Cloudinary via HTTP — tidak perlu package apapun
         $fotoUrl = null;
         if ($request->hasFile('foto_sebelum')) {
-            $uploaded = cloudinary()->upload(
-                $request->file('foto_sebelum')->getRealPath(),
-                [
-                    'folder'    => 'silapor/laporan',
-                    'public_id' => 'laporan_' . time() . '_' . Str::random(6),
-                ]
-            );
-            $fotoUrl = $uploaded->getSecurePath();
+            $file      = $request->file('foto_sebelum');
+            $cloudName = env('CLOUDINARY_CLOUD_NAME', 'drmuuupkd');
+            $apiKey    = env('CLOUDINARY_API_KEY', '536198542151349');
+            $apiSecret = env('CLOUDINARY_API_SECRET', 'j83vDe-VN7cp2gWE_ahN3C4Elec');
+            $timestamp = time();
+            $signature = sha1("folder=silapor/laporan&timestamp={$timestamp}{$apiSecret}");
+        
+            $response = \Illuminate\Support\Facades\Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
+                'api_key'   => $apiKey,
+                'timestamp' => $timestamp,
+                'signature' => $signature,
+                'folder'    => 'silapor/laporan',
+            ]);
+        
+            if ($response->successful()) {
+                $fotoUrl = $response->json('secure_url');
+            }
         }
 
         $laporan = Laporan::create([
