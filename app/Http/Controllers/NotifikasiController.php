@@ -1,45 +1,33 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 
-class NotifikasiApiController extends Controller
+class NotifikasiController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $notifikasis = Notifikasi::where('user_id', $request->user()->id)
+        $notifikasis = Notifikasi::with('user')
             ->latest()
-            ->get()
-            ->map(fn($n) => [
-                'id'           => $n->id,
-                'judul'        => $n->judul,
-                'pesan'        => $n->pesan,
-                'tipe'         => $n->tipe ?? 'info',
-                'sudah_dibaca' => (bool) $n->dibaca,
-                'link'         => $n->link,
-                'created_at'   => $n->created_at?->toIso8601String(),
-            ]);
+            ->paginate(20);
 
-        return response()->json(['success' => true, 'notifikasis' => $notifikasis]);
+        $belumDibaca = Notifikasi::where('dibaca', false)->count();
+
+        return view('notifikasi.index', compact('notifikasis', 'belumDibaca'));
     }
 
-    public function tandaiSemua(Request $request)
+    public function markAsRead($id)
     {
-        Notifikasi::where('user_id', $request->user()->id)
-            ->update(['dibaca' => true]);
-
-        return response()->json(['success' => true, 'message' => 'Semua notifikasi dibaca.']);
+        $notifikasi = Notifikasi::findOrFail($id);
+        $notifikasi->update(['dibaca' => true]);
+        return redirect()->back();
     }
 
-    public function tandaiSatu(Request $request, $id)
+    public function markAllAsRead()
     {
-        Notifikasi::where('user_id', $request->user()->id)
-            ->findOrFail($id)
-            ->update(['dibaca' => true]);
-
-        return response()->json(['success' => true, 'message' => 'Notifikasi ditandai dibaca.']);
+        Notifikasi::update(['dibaca' => true]);
+        return redirect()->back()->with('success', 'Semua notifikasi telah dibaca!');
     }
 }
