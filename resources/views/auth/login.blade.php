@@ -13,7 +13,7 @@
     
     {{-- Logo --}}
     <div class="flex items-center gap-3 mb-8">
-        <img src="{{ asset('images/logo_ska.png') }}" alt="Logo Surakarta" width="200">
+        <img src="{{ asset('logo_ska.png') }}" alt="Logo Surakarta" width="200">
         <div>
             <p class="font-bold" style="color:#8B2E2E;">Si Lapor</p>
             <p class="text-xs text-gray-400">Sistem Pengaduan Masyarakat<br>Kota Surakarta</p>
