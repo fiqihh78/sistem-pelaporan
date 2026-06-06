@@ -25,7 +25,7 @@
 
             {{-- Logo --}}
             <div class="flex items-center gap-3 mb-8 px-2">
-                <img src="{{ asset('logo_ska.png') }}" alt="Logo Surakarta" width="45">
+                <img src="{{ asset('logo_ska.png') }}" alt="Logo Surakarta" width="90">
                 <div>
                     <p class="font-bold text-gray-800 text-sm">Si Lapor</p>
                     <p class="text-xs text-gray-400">Kota Surakarta</p>
