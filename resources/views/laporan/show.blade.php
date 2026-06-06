@@ -17,162 +17,303 @@
 
         {{-- Header --}}
         <div class="bg-white rounded-xl shadow-sm p-5">
+
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <p class="text-xs text-gray-400">{{ $laporan->kode ?? 'REP-' . $laporan->id }}</p>
-                    <h1 class="text-xl font-bold text-gray-800">{{ $laporan->judul }}</h1>
+                    <p class="text-xs text-gray-400">
+                        {{ $laporan->kode ?? 'REP-' . $laporan->id }}
+                    </p>
+
+                    <h1 class="text-xl font-bold text-gray-800">
+                        {{ $laporan->judul }}
+                    </h1>
+
                     <p class="text-sm text-gray-400 mt-1">
-                        <i class="fa-solid fa-location-dot"></i> {{ $laporan->lokasi }}
+                        <i class="fa-solid fa-location-dot"></i>
+                        {{ $laporan->lokasi }}
                     </p>
                 </div>
+
                 @if($laporan->status == 'pending')
-                    <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">Pending</span>
+                    <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
+                        Pending
+                    </span>
                 @elseif($laporan->status == 'diproses')
-                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">Diproses</span>
+                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                        Diproses
+                    </span>
                 @elseif($laporan->status == 'selesai')
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">Selesai</span>
+                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+                        Selesai
+                    </span>
                 @else
-                    <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">Ditolak</span>
+                    <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
+                        Ditolak
+                    </span>
                 @endif
             </div>
 
             <div class="border-t pt-4">
-                <p class="text-sm text-gray-600 leading-relaxed">{{ $laporan->deskripsi }}</p>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    {{ $laporan->deskripsi }}
+                </p>
             </div>
 
-            {{-- ▼ FOTO DARI USER (foto_sebelum) ▼ --}}
+            {{-- FOTO SEBELUM --}}
             @if($laporan->foto_sebelum)
-            <div class="mt-4">
-                <p class="text-sm font-medium text-gray-700 mb-2">
-                    <i class="fa-solid fa-image text-blue-500"></i> Foto Laporan dari User
+            <div class="mt-6">
+                <p class="text-sm font-medium text-gray-700 mb-3">
+                    <i class="fa-solid fa-image text-blue-500"></i>
+                    Foto Laporan dari User
                 </p>
-                <img src="{{ $laporan->foto_sebelum }}"
-                     alt="Foto Laporan"
-                     class="rounded-lg w-full aspect-[9/16] object-cover"
-                     onerror="this.style.display='none'">
+
+                <div class="w-48 h-48 overflow-hidden rounded-xl border shadow-sm">
+                    <img
+                        src="{{ $laporan->foto_sebelum }}"
+                        alt="Foto Laporan"
+                        class="w-full h-full object-cover cursor-pointer hover:scale-105 transition duration-300"
+                        onclick="openImage('{{ $laporan->foto_sebelum }}')"
+                        onerror="this.style.display='none'">
+                </div>
             </div>
             @endif
 
-            {{-- ▼ FOTO SESUDAH (foto_sesudah) ▼ --}}
+            {{-- FOTO SESUDAH --}}
             @if($laporan->foto_sesudah)
-            <div class="mt-4">
-                <p class="text-sm font-medium text-gray-700 mb-2">
-                    <i class="fa-solid fa-image text-green-500"></i> Foto Sesudah Diperbaiki
+            <div class="mt-6">
+                <p class="text-sm font-medium text-gray-700 mb-3">
+                    <i class="fa-solid fa-image text-green-500"></i>
+                    Foto Sesudah Diperbaiki
                 </p>
-                <img src="{{ $laporan->foto_sesudah }}"
-                     alt="Foto Sesudah"
-                     class="rounded-lg max-h-64 object-cover w-full"
-                     onerror="this.style.display='none'">
+
+                <div class="w-48 h-48 overflow-hidden rounded-xl border shadow-sm">
+                    <img
+                        src="{{ $laporan->foto_sesudah }}"
+                        alt="Foto Sesudah"
+                        class="w-full h-full object-cover cursor-pointer hover:scale-105 transition duration-300"
+                        onclick="openImage('{{ $laporan->foto_sesudah }}')"
+                        onerror="this.style.display='none'">
+                </div>
             </div>
             @endif
 
-            {{-- ▼ FOTO BUKTI LAMA (backward compat) ▼ --}}
-            @if($laporan->foto_bukti)
-            <div class="mt-4">
-                <p class="text-sm font-medium text-gray-700 mb-2">Foto Bukti</p>
-                <img src="{{ asset('storage/' . $laporan->foto_bukti) }}"
-                     alt="Bukti"
-                     class="rounded-lg max-h-64 object-cover">
-            </div>
-            @endif
         </div>
 
-        {{-- Update Status --}}
+        {{-- UPDATE STATUS --}}
         <div class="bg-white rounded-xl shadow-sm p-5">
-            <h2 class="font-semibold text-gray-800 mb-4">Update Status Laporan</h2>
-            <form action="{{ route('laporan.updateStatus', $laporan->id) }}" method="POST" class="space-y-4">
+
+            <h2 class="font-semibold text-gray-800 mb-4">
+                Update Status Laporan
+            </h2>
+
+            <form action="{{ route('laporan.updateStatus', $laporan->id) }}"
+                  method="POST"
+                  class="space-y-4">
+
                 @csrf
                 @method('PUT')
+
                 <div class="grid grid-cols-2 gap-4">
+
                     <div>
-                        <label class="text-sm text-gray-600">Status</label>
+                        <label class="text-sm text-gray-600">
+                            Status
+                        </label>
+
                         <select name="status"
                                 class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
-                            <option value="pending"  {{ $laporan->status == 'pending'  ? 'selected' : '' }}>Pending</option>
-                            <option value="diproses" {{ $laporan->status == 'diproses' ? 'selected' : '' }}>Diproses</option>
-                            <option value="selesai"  {{ $laporan->status == 'selesai'  ? 'selected' : '' }}>Selesai</option>
-                            <option value="ditolak"  {{ $laporan->status == 'ditolak'  ? 'selected' : '' }}>Ditolak</option>
+
+                            <option value="pending"
+                                {{ $laporan->status == 'pending' ? 'selected' : '' }}>
+                                Pending
+                            </option>
+
+                            <option value="diproses"
+                                {{ $laporan->status == 'diproses' ? 'selected' : '' }}>
+                                Diproses
+                            </option>
+
+                            <option value="selesai"
+                                {{ $laporan->status == 'selesai' ? 'selected' : '' }}>
+                                Selesai
+                            </option>
+
+                            <option value="ditolak"
+                                {{ $laporan->status == 'ditolak' ? 'selected' : '' }}>
+                                Ditolak
+                            </option>
+
                         </select>
                     </div>
+
                     <div>
-                        <label class="text-sm text-gray-600">Assign Petugas</label>
+                        <label class="text-sm text-gray-600">
+                            Assign Petugas
+                        </label>
+
                         <select name="petugas_id"
                                 class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
-                            <option value="">-- Pilih Petugas --</option>
+
+                            <option value="">
+                                -- Pilih Petugas --
+                            </option>
+
                             @forelse($petugas as $p)
                                 <option value="{{ $p->id }}"
                                     {{ optional($laporan->penugasan)->petugas_id == $p->id ? 'selected' : '' }}>
                                     {{ $p->nama }} ({{ $p->spesialisasi ?? '-' }})
                                 </option>
                             @empty
-                                <option disabled>Belum ada petugas aktif</option>
+                                <option disabled>
+                                    Belum ada petugas aktif
+                                </option>
                             @endforelse
+
                         </select>
                     </div>
+
                 </div>
+
                 <div>
-                    <label class="text-sm text-gray-600">Catatan Admin</label>
-                    <textarea name="catatan_admin" rows="3"
+                    <label class="text-sm text-gray-600">
+                        Catatan Admin
+                    </label>
+
+                    <textarea name="catatan_admin"
+                              rows="3"
                               class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">{{ $laporan->catatan_admin }}</textarea>
                 </div>
+
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
                     Simpan Perubahan
                 </button>
+
             </form>
+
         </div>
+
     </div>
 
-    {{-- Sidebar Info --}}
+    {{-- SIDEBAR --}}
     <div class="space-y-4">
 
-        {{-- Info Pelapor --}}
+        {{-- INFO PELAPOR --}}
         <div class="bg-white rounded-xl shadow-sm p-5">
-            <h2 class="font-semibold text-gray-800 mb-3">Info Pelapor</h2>
+
+            <h2 class="font-semibold text-gray-800 mb-3">
+                Info Pelapor
+            </h2>
+
             <div class="flex items-center gap-3 mb-3">
+
                 <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
                     {{ strtoupper(substr($laporan->user->name ?? $laporan->pelapor ?? 'U', 0, 1)) }}
                 </div>
+
                 <div>
                     <p class="text-sm font-medium text-gray-800">
                         {{ $laporan->user->name ?? $laporan->pelapor ?? '-' }}
                     </p>
-                    <p class="text-xs text-gray-400">{{ $laporan->user->email ?? '-' }}</p>
+
+                    <p class="text-xs text-gray-400">
+                        {{ $laporan->user->email ?? '-' }}
+                    </p>
                 </div>
+
             </div>
+
             <div class="text-xs text-gray-500 space-y-1">
-                <p><span class="font-medium">Kategori:</span> {{ $laporan->kategori->nama ?? '-' }}</p>
-                <p><span class="font-medium">Kode:</span> {{ $laporan->kode ?? 'REP-' . $laporan->id }}</p>
-                <p><span class="font-medium">Tanggal:</span> {{ $laporan->created_at->format('d M Y, H:i') }}</p>
+                <p>
+                    <span class="font-medium">Kategori:</span>
+                    {{ $laporan->kategori->nama ?? '-' }}
+                </p>
+
+                <p>
+                    <span class="font-medium">Kode:</span>
+                    {{ $laporan->kode ?? 'REP-' . $laporan->id }}
+                </p>
+
+                <p>
+                    <span class="font-medium">Tanggal:</span>
+                    {{ $laporan->created_at->format('d M Y, H:i') }}
+                </p>
             </div>
+
         </div>
 
-        {{-- Info Petugas Assigned --}}
+        {{-- PETUGAS --}}
         <div class="bg-white rounded-xl shadow-sm p-5">
-            <h2 class="font-semibold text-gray-800 mb-3">Petugas Assigned</h2>
+
+            <h2 class="font-semibold text-gray-800 mb-3">
+                Petugas Assigned
+            </h2>
+
             @if($laporan->penugasan && $laporan->penugasan->petugas)
+
                 <div class="flex items-center gap-3">
+
                     <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
                         {{ strtoupper(substr($laporan->penugasan->petugas->nama ?? 'P', 0, 1)) }}
                     </div>
+
                     <div>
                         <p class="text-sm font-medium text-gray-800">
                             {{ $laporan->penugasan->petugas->nama ?? '-' }}
                         </p>
+
                         <p class="text-xs text-gray-400">
                             {{ $laporan->penugasan->petugas->spesialisasi ?? '-' }}
                         </p>
+
                         <p class="text-xs text-gray-400">
                             {{ $laporan->penugasan->petugas->telepon ?? '-' }}
                         </p>
                     </div>
+
                 </div>
+
             @else
-                <p class="text-sm text-gray-400">Belum ada petugas assigned</p>
+
+                <p class="text-sm text-gray-400">
+                    Belum ada petugas assigned
+                </p>
+
             @endif
+
         </div>
 
     </div>
+
 </div>
+
+{{-- MODAL IMAGE --}}
+<div id="imageModal"
+     onclick="closeImage()"
+     class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+
+    <button
+        onclick="closeImage()"
+        class="absolute top-5 right-5 text-white text-4xl z-50">
+        &times;
+    </button>
+
+    <img id="modalImage"
+         onclick="event.stopPropagation()"
+         class="max-w-[90%] max-h-[90%] rounded-2xl shadow-2xl">
+</div>
+
+<script>
+function openImage(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.remove('hidden');
+    document.getElementById('imageModal').classList.add('flex');
+}
+
+function closeImage() {
+    document.getElementById('imageModal').classList.add('hidden');
+    document.getElementById('imageModal').classList.remove('flex');
+}
+</script>
 
 @endsection
