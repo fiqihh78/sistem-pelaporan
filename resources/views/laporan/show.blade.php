@@ -69,10 +69,10 @@
                         <select name="petugas_id"
                                 class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
                             <option value="">-- Pilih Petugas --</option>
-                            @foreach(\App\Models\Petugas::with('user')->get() as $p)
-                            <option value="{{ $p->id }}" {{ $laporan->petugas_id == $p->id ? 'selected' : '' }}>
-                                {{ $p->user->name ?? '-' }} ({{ $p->spesialisasi }})
-                            </option>
+                            @foreach($petugas as $p)
+                                <option value="{{ $p->id }}" {{ optional($laporan->penugasan)->petugas_id == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama }} ({{ $p->spesialisasi }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
