@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Laporan;
 use App\Models\Kategori;
 use App\Models\Notifikasi;
+use App\Models\Petugas;
 use Illuminate\Http\Request;
 
 class LaporanController extends Controller
 {
-
     public function index(Request $request)
     {
         $query = Laporan::with('kategori')->latest();
@@ -32,20 +32,20 @@ class LaporanController extends Controller
 
     public function show($id)
     {
-        $laporan = Laporan::with(['kategori', 'penugasan.petugas'])->findOrFail($id);
-        return view('laporan.show', compact('laporan'));
+        $laporan  = Laporan::with(['kategori', 'penugasan.petugas'])->findOrFail($id);
+        $petugas  = Petugas::where('status', 'aktif')->get();
+        return view('laporan.show', compact('laporan', 'petugas'));
     }
 
     public function update(Request $request, $id)
     {
         $laporan    = Laporan::findOrFail($id);
         $statusLama = $laporan->status;
-        $kode       = $laporan->kode ?? '#REP-' . $laporan->id;
+        $kode       = $laporan->kode ?? 'REP-' . $laporan->id;
 
         $data = $request->only(['status', 'foto_sesudah']);
         $laporan->update($data);
 
-        // Notifikasi jika status berubah
         if (isset($data['status']) && $data['status'] !== $statusLama) {
             $labelStatus = match($data['status']) {
                 'diproses' => 'sedang diproses',
@@ -55,13 +55,47 @@ class LaporanController extends Controller
             };
 
             Notifikasi::create([
-                'judul' => 'Status Laporan Diperbarui',
-                'pesan' => "Laporan \"{$laporan->judul}\" ({$kode}) {$labelStatus}.",
-                'tipe'  => 'status_berubah',
-                'link'  => "/laporan/{$laporan->id}",
+                'judul'   => 'Status Laporan Diperbarui',
+                'pesan'   => "Laporan \"{$laporan->judul}\" ({$kode}) {$labelStatus}.",
+                'tipe'    => 'status_berubah',
+                'user_id' => $laporan->user_id,
+                'link'    => "/laporan/{$laporan->id}",
             ]);
         }
 
         return back()->with('success', 'Laporan berhasil diperbarui.');
+    }
+
+    // Method updateStatus yang dipanggil dari route PUT /laporan/{id}/status
+    public function updateStatus(Request $request, $id)
+    {
+        $laporan    = Laporan::findOrFail($id);
+        $statusLama = $laporan->status;
+        $kode       = $laporan->kode ?? 'REP-' . $laporan->id;
+
+        $request->validate([
+            'status' => 'required|in:pending,diproses,selesai,ditolak',
+        ]);
+
+        $laporan->update(['status' => $request->status]);
+
+        if ($request->status !== $statusLama) {
+            $labelStatus = match($request->status) {
+                'diproses' => 'sedang diproses',
+                'selesai'  => 'telah selesai',
+                'ditolak'  => 'ditolak',
+                default    => $request->status,
+            };
+
+            Notifikasi::create([
+                'judul'   => 'Status Laporan Diperbarui',
+                'pesan'   => "Laporan \"{$laporan->judul}\" ({$kode}) {$labelStatus}.",
+                'tipe'    => 'status_berubah',
+                'user_id' => $laporan->user_id,
+                'link'    => "/laporan/{$laporan->id}",
+            ]);
+        }
+
+        return back()->with('success', 'Status laporan berhasil diperbarui.');
     }
 }
