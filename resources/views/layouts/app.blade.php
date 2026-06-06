@@ -19,7 +19,7 @@
 <div class="flex h-screen overflow-hidden">
 
     {{-- ================= SIDEBAR ================= --}}
-    <aside class="w-64 bg-white shadow-md flex flex-col justify-between py-6 px-4">
+    <aside class="w-64 shadow-md flex flex-col justify-between py-6 px-4" style="background-color: #03032c;">
 
         <div>
 
