@@ -9,23 +9,26 @@ class NotifikasiController extends Controller
 {
     public function index()
     {
-        $notifikasis = Notifikasi::where('user_id', auth()->id())
-                        ->latest()
-                        ->paginate(10);
-        return view('notifikasi.index', compact('notifikasis'));
+        // Admin lihat SEMUA notifikasi dari semua user
+        $notifikasis = Notifikasi::with('user')
+            ->latest()
+            ->paginate(20);
+
+        $belumDibaca = Notifikasi::where('sudah_dibaca', false)->count();
+
+        return view('notifikasi.index', compact('notifikasis', 'belumDibaca'));
     }
 
     public function markAsRead($id)
     {
         $notifikasi = Notifikasi::findOrFail($id);
-        $notifikasi->update(['dibaca' => true]);
+        $notifikasi->update(['sudah_dibaca' => true]);
         return redirect()->back();
     }
 
     public function markAllAsRead()
     {
-        Notifikasi::where('user_id', auth()->id())
-                ->update(['dibaca' => true]);
+        Notifikasi::update(['sudah_dibaca' => true]);
         return redirect()->back()->with('success', 'Semua notifikasi telah dibaca!');
     }
 }
