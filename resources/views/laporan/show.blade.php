@@ -46,7 +46,7 @@
                 <p class="text-sm font-medium text-gray-700 mb-2">
                     <i class="fa-solid fa-image text-blue-500"></i> Foto Laporan dari User
                 </p>
-                <img src="{{ url('storage/' . $laporan->foto_sebelum) }}"
+                <img src="{{ $laporan->foto_sebelum }}"
                      alt="Foto Laporan"
                      class="rounded-lg max-h-64 object-cover w-full"
                      onerror="this.style.display='none'">
@@ -59,7 +59,7 @@
                 <p class="text-sm font-medium text-gray-700 mb-2">
                     <i class="fa-solid fa-image text-green-500"></i> Foto Sesudah Diperbaiki
                 </p>
-                <img src="{{ url('storage/' . $laporan->foto_sesudah) }}"
+                <img src="{{ $laporan->foto_sesudah }}"
                      alt="Foto Sesudah"
                      class="rounded-lg max-h-64 object-cover w-full"
                      onerror="this.style.display='none'">
