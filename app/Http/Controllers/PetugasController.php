@@ -35,7 +35,7 @@ class PetugasController extends Controller
         // Kode unik: #PTG- + 5 karakter random huruf besar
         do {
             $kode = '#PTG-' . strtoupper(Str::random(5));
-        } while (Petugas::where('kode', $kode)->exists());
+        } while (Petugas::where('id_petugas', $kode)->exists());
 
         $petugas = Petugas::create([
             'kode'         => $kode,
