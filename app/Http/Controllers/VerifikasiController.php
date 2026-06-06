@@ -3,46 +3,60 @@
 namespace App\Http\Controllers;
 
 use App\Models\Laporan;
-use App\Models\Petugas;
+use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 
 class VerifikasiController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
-        $laporans = Laporan::with(['user', 'kategori'])
-                        ->where('status', 'pending')
-                        ->latest()
-                        ->paginate(10);
-
-        $total_pending    = Laporan::where('status', 'pending')->count();
-        $terverifikasi    = Laporan::where('status', '!=', 'pending')->count();
-        $ditolak          = Laporan::where('status', 'ditolak')->count();
-
-        return view('verifikasi.index', compact(
-            'laporans',
-            'total_pending',
-            'terverifikasi',
-            'ditolak'
-        ));
+        $menunggu      = Laporan::where('terverifikasi', false)->where('status', '!=', 'ditolak')->count();
+        $terverifikasi = Laporan::where('terverifikasi', true)->whereDate('updated_at', today())->count();
+        $belumDiproses = Laporan::where('status', 'pending')->where('terverifikasi', true)->count();
+        $laporans      = Laporan::with('kategori')
+            ->where('terverifikasi', false)
+            ->where('status', '!=', 'ditolak')
+            ->latest()
+            ->paginate(10);
+        return view('verifikasi.index', compact('menunggu', 'terverifikasi', 'belumDiproses', 'laporans'));
     }
 
-    public function approve(Request $request, $id)
+    public function verifikasi($id)
     {
         $laporan = Laporan::findOrFail($id);
-        $laporan->update([
-            'status'     => 'diproses',
-            'petugas_id' => $request->petugas_id,
+        $kode    = $laporan->kode ?? '#REP-' . $laporan->id;
+        $laporan->update(['terverifikasi' => true]);
+
+        // Notifikasi: laporan terverifikasi → siap ditugaskan
+        Notifikasi::create([
+            'judul' => 'Laporan Diverifikasi ✅',
+            'pesan' => "Laporan \"{$laporan->judul}\" ({$kode}) telah diverifikasi dan siap untuk ditugaskan ke petugas.",
+            'tipe'  => 'status_berubah',
+            'link'  => "/laporan/{$laporan->id}",
         ]);
 
-        return redirect()->back()->with('success', 'Laporan berhasil diverifikasi!');
+        return back()->with('success', "Laporan {$kode} berhasil diverifikasi.");
     }
 
-    public function reject($id)
+    public function tolak($id)
     {
         $laporan = Laporan::findOrFail($id);
+        $kode    = $laporan->kode ?? '#REP-' . $laporan->id;
         $laporan->update(['status' => 'ditolak']);
 
-        return redirect()->back()->with('success', 'Laporan ditolak!');
+        // Notifikasi: laporan ditolak
+        Notifikasi::create([
+            'judul' => 'Laporan Ditolak ❌',
+            'pesan' => "Laporan \"{$laporan->judul}\" ({$kode}) telah ditolak oleh admin.",
+            'tipe'  => 'status_berubah',
+            'link'  => "/laporan/{$laporan->id}",
+        ]);
+
+        return back()->with('success', "Laporan {$kode} berhasil ditolak.");
     }
 }
