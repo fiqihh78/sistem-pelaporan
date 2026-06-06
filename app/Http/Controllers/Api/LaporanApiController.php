@@ -32,73 +32,72 @@ class LaporanApiController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'kategori_id'  => 'required|exists:kategoris,id',
-            'judul'        => 'required|string|max:255',
-            'deskripsi'    => 'required|string',
-            'lokasi'       => 'required|string',
-            'foto_sebelum' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+{
+    $request->validate([
+        'kategori_id'  => 'required|exists:kategoris,id',
+        'judul'        => 'required|string|max:255',
+        'deskripsi'    => 'required|string',
+        'lokasi'       => 'required|string',
+        'foto_sebelum' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+    ]);
+
+    $user = $request->user();
+    $kode = 'REP-' . strtoupper(Str::random(6));
+
+    // Upload ke Cloudinary via HTTP (tanpa package tambahan)
+    $fotoUrl = null;
+    if ($request->hasFile('foto_sebelum')) {
+        $file      = $request->file('foto_sebelum');
+        $cloudName = env('CLOUDINARY_CLOUD_NAME', 'drmuuupkd');
+        $apiKey    = env('CLOUDINARY_API_KEY', '536198542151349');
+        $apiSecret = env('CLOUDINARY_API_SECRET', 'j83vDe-VN7cp2gWE_ahN3C4Elec');
+        $timestamp = time();
+        $signature = sha1("folder=silapor/laporan&timestamp={$timestamp}{$apiSecret}");
+
+        $response = \Illuminate\Support\Facades\Http::attach(
+            'file',
+            file_get_contents($file->getRealPath()),
+            $file->getClientOriginalName()
+        )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
+            'api_key'   => $apiKey,
+            'timestamp' => $timestamp,
+            'signature' => $signature,
+            'folder'    => 'silapor/laporan',
         ]);
 
-        $user = $request->user();
-        $kode = 'REP-' . strtoupper(Str::random(6));
-
-        // Upload foto ke Cloudinary
-        // Upload ke Cloudinary via HTTP — tidak perlu package apapun
-        $fotoUrl = null;
-        if ($request->hasFile('foto_sebelum')) {
-            $file      = $request->file('foto_sebelum');
-            $cloudName = env('CLOUDINARY_CLOUD_NAME', 'drmuuupkd');
-            $apiKey    = env('CLOUDINARY_API_KEY', '536198542151349');
-            $apiSecret = env('CLOUDINARY_API_SECRET', 'j83vDe-VN7cp2gWE_ahN3C4Elec');
-            $timestamp = time();
-            $signature = sha1("folder=silapor/laporan&timestamp={$timestamp}{$apiSecret}");
-        
-            $response = \Illuminate\Support\Facades\Http::attach(
-                'file',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
-            )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
-                'api_key'   => $apiKey,
-                'timestamp' => $timestamp,
-                'signature' => $signature,
-                'folder'    => 'silapor/laporan',
-            ]);
-        
-            if ($response->successful()) {
-                $fotoUrl = $response->json('secure_url');
-            }
+        if ($response->successful()) {
+            $fotoUrl = $response->json('secure_url');
         }
-
-        $laporan = Laporan::create([
-            'kode'          => $kode,
-            'user_id'       => $user->id,
-            'pelapor'       => $user->name,
-            'kategori_id'   => $request->kategori_id,
-            'judul'         => $request->judul,
-            'deskripsi'     => $request->deskripsi,
-            'lokasi'        => $request->lokasi,
-            'foto_sebelum'  => $fotoUrl,  // URL Cloudinary
-            'status'        => 'pending',
-            'prioritas'     => 'medium',
-            'terverifikasi' => false,
-        ]);
-
-        Notifikasi::create([
-            'user_id' => $user->id,
-            'judul'   => 'Laporan Terkirim',
-            'pesan'   => "Laporan \"{$laporan->judul}\" ({$kode}) berhasil dikirim.",
-            'tipe'    => 'laporan_baru',
-            'dibaca'  => false,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Laporan berhasil dikirim.',
-            'laporan' => $this->format($laporan->load('kategori')),
-        ], 201);
     }
+
+    $laporan = Laporan::create([
+        'kode'          => $kode,
+        'user_id'       => $user->id,
+        'pelapor'       => $user->name,
+        'kategori_id'   => $request->kategori_id,
+        'judul'         => $request->judul,
+        'deskripsi'     => $request->deskripsi,
+        'lokasi'        => $request->lokasi,
+        'foto_sebelum'  => $fotoUrl,
+        'status'        => 'pending',
+        'prioritas'     => 'medium',
+        'terverifikasi' => false,
+    ]);
+
+    Notifikasi::create([
+        'user_id' => $user->id,
+        'judul'   => 'Laporan Terkirim ✅',
+        'pesan'   => "Laporan \"{$laporan->judul}\" ({$kode}) berhasil dikirim.",
+        'tipe'    => 'laporan_baru',
+        'dibaca'  => false,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Laporan berhasil dikirim.',
+        'laporan' => $this->format($laporan->load('kategori')),
+    ], 201);
+}
 
     public function show(Request $request, $id)
     {
