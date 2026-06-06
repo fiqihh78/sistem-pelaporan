@@ -13,12 +13,10 @@
     
     {{-- Logo --}}
     <div class="flex items-center gap-3 mb-8">
-        <div class="bg-blue-600 text-white rounded-lg p-2">
-            <i class="fa-solid fa-flag"></i>
-        </div>
+        <img src="{{ asset('images/logo_ska.png') }}" alt="Logo Surakarta" width="200">
         <div>
-            <p class="font-bold text-gray-800">Si Lapor</p>
-            <p class="text-xs text-gray-400">Sistem Pengaduan Masyarakat</p>
+            <p class="font-bold" style="color:#8B2E2E;">Si Lapor</p>
+            <p class="text-xs text-gray-400">Sistem Pengaduan Masyarakat<br>Kota Surakarta</p>
         </div>
     </div>
 
