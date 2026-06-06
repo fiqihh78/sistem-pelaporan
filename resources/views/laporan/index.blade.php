@@ -1,92 +1,56 @@
 @extends('layouts.app')
-
+@section('title', 'Laporan Masuk')
 @section('content')
-
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-xl font-bold text-gray-800">Laporan Masuk</h1>
-        <p class="text-sm text-gray-400">Daftar semua laporan dari masyarakat</p>
-    </div>
-    <a href="{{ route('laporan.exportPdf') }}"
-       class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-red-600">
-        <i class="fa-solid fa-file-pdf"></i> Export PDF
-    </a>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="fw-bold mb-0">Laporan Masuk</h4>
 </div>
-
-{{-- Filter Status --}}
-<div class="flex gap-2 mb-4">
-    <a href="{{ request()->fullUrlWithQuery(['status' => '']) }}"
-       class="px-4 py-2 rounded-lg text-sm {{ !request('status') ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50' }}">
-        Semua
-    </a>
-    <a href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}"
-       class="px-4 py-2 rounded-lg text-sm {{ request('status') == 'pending' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50' }}">
-        Pending
-    </a>
-    <a href="{{ request()->fullUrlWithQuery(['status' => 'diproses']) }}"
-       class="px-4 py-2 rounded-lg text-sm {{ request('status') == 'diproses' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50' }}">
-        Diproses
-    </a>
-    <a href="{{ request()->fullUrlWithQuery(['status' => 'selesai']) }}"
-       class="px-4 py-2 rounded-lg text-sm {{ request('status') == 'selesai' ? 'bg-green-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50' }}">
-        Selesai
-    </a>
-    <a href="{{ request()->fullUrlWithQuery(['status' => 'ditolak']) }}"
-       class="px-4 py-2 rounded-lg text-sm {{ request('status') == 'ditolak' ? 'bg-red-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50' }}">
-        Ditolak
-    </a>
-</div>
-
-{{-- Tabel --}}
-<div class="bg-white rounded-xl shadow-sm p-5">
-    <table class="w-full text-sm">
+<div class="stat-card">
+    <form method="GET" class="row g-2 mb-3">
+        <div class="col-md-5">
+            <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari kode atau pelapor..." value="{{ request('search') }}">
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select form-select-sm">
+                <option value="">Semua Status</option>
+                <option value="pending" {{ request('status')=='pending'?'selected':'' }}>Pending</option>
+                <option value="diproses" {{ request('status')=='diproses'?'selected':'' }}>Diproses</option>
+                <option value="selesai" {{ request('status')=='selesai'?'selected':'' }}>Selesai</option>
+            </select>
+        </div>
+        <div class="col-md-2"><button class="btn btn-primary btn-sm w-100">Filter</button></div>
+    </form>
+    <table class="table table-custom mb-3">
         <thead>
-            <tr class="text-left text-gray-400 border-b">
-                <th class="pb-3">ID Laporan</th>
-                <th class="pb-3">Pelapor</th>
-                <th class="pb-3">Kategori</th>
-                <th class="pb-3">Lokasi</th>
-                <th class="pb-3">Tanggal</th>
-                <th class="pb-3">Status</th>
-                <th class="pb-3">Aksi</th>
+            <tr>
+                <th>ID LAPORAN</th>
+                <th>PELAPOR</th>
+                <th>KATEGORI</th>
+                <th>LOKASI</th>
+                <th>TANGGAL</th>
+                <th>STATUS</th>
+                <th>AKSI</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($laporans as $laporan)
-            <tr class="border-b hover:bg-gray-50">
-                <td class="py-3 text-blue-600 font-medium">{{ $laporan->nomor_laporan }}</td>
-                <td class="py-3 text-gray-700">{{ $laporan->user->name ?? '-' }}</td>
-                <td class="py-3 text-gray-700">{{ $laporan->kategori->nama ?? '-' }}</td>
-                <td class="py-3 text-gray-500">{{ $laporan->lokasi }}</td>
-                <td class="py-3 text-gray-400">{{ $laporan->created_at->format('d M Y') }}</td>
-                <td class="py-3">
-                    @if($laporan->status == 'pending')
-                        <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">Pending</span>
-                    @elseif($laporan->status == 'diproses')
-                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">Diproses</span>
-                    @elseif($laporan->status == 'selesai')
-                        <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Selesai</span>
-                    @else
-                        <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">Ditolak</span>
-                    @endif
-                </td>
-                <td class="py-3">
-                    <a href="{{ route('laporan.show', $laporan->id) }}"
-                       class="text-blue-600 hover:underline text-xs">Detail</a>
+            @forelse($laporans as $l)
+            <tr>
+                <td><a href="{{ route('laporan.show', $l->id) }}" class="kode-link">{{ $l->kode ?? '#REP-'.$l->id }}</a></td>
+                <td>{{ $l->pelapor }}</td>
+                <td>{{ $l->kategori->nama ?? '-' }}</td>
+                <td style="font-size:0.82rem;">{{ $l->lokasi }}</td>
+                <td>{{ $l->created_at->format('d M Y') }}</td>
+                <td><span class="badge-status badge-{{ $l->status }}">{{ strtoupper($l->status) }}</span></td>
+                <td>
+                    <a href="{{ route('laporan.show', $l->id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> Detail</a>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="py-8 text-center text-gray-400">Belum ada laporan masuk</td>
+                <td colspan="6" class="text-center text-muted py-4">Tidak ada laporan.</td>
             </tr>
             @endforelse
         </tbody>
     </table>
-
-    {{-- Pagination --}}
-    <div class="mt-4">
-        {{ $laporans->links() }}
-    </div>
+    {{ $laporans->links() }}
 </div>
-
 @endsection
