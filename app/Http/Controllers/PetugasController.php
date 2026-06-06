@@ -17,7 +17,7 @@ class PetugasController extends Controller
         if ($request->status) $query->where('status', $request->status);
         if ($request->spesialisasi) $query->where('spesialisasi', $request->spesialisasi);
         $total    = Petugas::count();
-        $aktif    = Petugas::where('status', 'bertugas')->count();
+        $aktif    = Petugas::where('status', 'aktif')->count();
         $tersedia = Petugas::where('status', 'tersedia')->count();
         $petugas  = $query->paginate(10);
         return view('petugas.index', compact('petugas', 'total', 'aktif', 'tersedia'));
