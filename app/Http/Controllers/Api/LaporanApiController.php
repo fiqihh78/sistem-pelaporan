@@ -48,9 +48,9 @@ class LaporanApiController extends Controller
     $fotoUrl = null;
     if ($request->hasFile('foto_sebelum')) {
         $file      = $request->file('foto_sebelum');
-        $cloudName = env('CLOUDINARY_CLOUD_NAME', 'drmuuupkd');
-        $apiKey    = env('CLOUDINARY_API_KEY', '536198542151349');
-        $apiSecret = env('CLOUDINARY_API_SECRET', 'j83vDe-VN7cp2gWE_ahN3C4Elec');
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey    = env('CLOUDINARY_API_KEY');
+        $apiSecret = env('CLOUDINARY_API_SECRET');
         $timestamp = time();
         $signature = sha1("folder=silapor/laporan&timestamp={$timestamp}{$apiSecret}");
 
@@ -86,7 +86,7 @@ class LaporanApiController extends Controller
 
     Notifikasi::create([
         'user_id' => $user->id,
-        'judul'   => 'Laporan Terkirim ✅',
+        'judul'   => 'Laporan Terkirim',
         'pesan'   => "Laporan \"{$laporan->judul}\" ({$kode}) berhasil dikirim.",
         'tipe'    => 'laporan_baru',
         'dibaca'  => false,
