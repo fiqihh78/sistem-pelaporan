@@ -16,7 +16,7 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring bcmath zip gd opcache
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # ── 4. Copy composer files DULU (biar layer ter-cache) ───────────────
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
 # ── 5. Install tanpa scripts (biar tidak butuh .env saat build) ──────
 RUN composer install \
