@@ -12,14 +12,22 @@ class Petugas extends Model
     protected $table = 'petugas';
 
     protected $fillable = [
-        'user_id',
-        'id_petugas',
         'nama',
         'email',
-        'foto',
+        'telepon',
         'spesialisasi',
         'status',
-        'beban_kerja',
-        'lokasi_saat_ini',
+        'foto',
     ];
+
+    // Relasi ke User (jika petugas punya akun login)
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'email', 'email');
+    }
+
+    public function penugasans()
+    {
+        return $this->hasMany(Penugasan::class, 'petugas_id');
+    }
 }
