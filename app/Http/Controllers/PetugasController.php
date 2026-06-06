@@ -14,13 +14,13 @@ class PetugasController extends Controller
         if ($request->search) $query->where('nama', 'like', "%{$request->search}%");
         if ($request->status) $query->where('status', $request->status);
         if ($request->spesialisasi) $query->where('spesialisasi', $request->spesialisasi);
-
+    
         $total    = Petugas::count();
         $aktif    = Petugas::where('status', 'aktif')->count();
-        $tersedia = Petugas::where('status', 'nonaktif')->count();
+        $nonaktif = Petugas::where('status', 'nonaktif')->count(); // ← tambah ini
         $petugas  = $query->paginate(10);
-
-        return view('petugas.index', compact('petugas', 'total', 'aktif', 'tersedia'));
+    
+        return view('petugas.index', compact('petugas', 'total', 'aktif', 'nonaktif')); // ← tambah $nonaktif
     }
 
     public function store(Request $request)
