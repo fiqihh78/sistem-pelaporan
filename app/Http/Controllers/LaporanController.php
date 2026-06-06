@@ -4,83 +4,68 @@ namespace App\Http\Controllers;
 
 use App\Models\Laporan;
 use App\Models\Kategori;
-use App\Models\Petugas;
+use App\Models\Notifikasi;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index(Request $request)
     {
-        $query = Laporan::with(['user', 'kategori', 'petugas'])->latest();
+        $query = Laporan::with('kategori')->latest();
 
-        // Filter by status
-        if ($request->has('status') && $request->status != '') {
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('kode', 'like', "%{$request->search}%")
+                  ->orWhere('pelapor', 'like', "%{$request->search}%")
+                  ->orWhere('judul', 'like', "%{$request->search}%");
+            });
+        }
+
+        if ($request->status) {
             $query->where('status', $request->status);
         }
 
         $laporans = $query->paginate(10);
-
         return view('laporan.index', compact('laporans'));
     }
 
     public function show($id)
     {
-        $laporan = Laporan::with(['user', 'kategori', 'petugas'])
-                        ->findOrFail($id);
+        $laporan = Laporan::with(['kategori', 'penugasan.petugas'])->findOrFail($id);
         return view('laporan.show', compact('laporan'));
     }
 
-    public function store(Request $request)
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'judul'       => 'required|string|max:255',
-            'deskripsi'   => 'required|string',
-            'lokasi'      => 'required|string',
-            'kategori_id' => 'required|exists:kategoris,id',
-            'foto_bukti'  => 'nullable|image|max:2048',
-        ]);
+        $laporan    = Laporan::findOrFail($id);
+        $statusLama = $laporan->status;
+        $kode       = $laporan->kode ?? '#REP-' . $laporan->id;
 
-        $foto = null;
-        if ($request->hasFile('foto_bukti')) {
-            $foto = $request->file('foto_bukti')->store('bukti', 'public');
+        $data = $request->only(['status', 'foto_sesudah']);
+        $laporan->update($data);
+
+        // Notifikasi jika status berubah
+        if (isset($data['status']) && $data['status'] !== $statusLama) {
+            $labelStatus = match($data['status']) {
+                'diproses' => 'sedang diproses',
+                'selesai'  => 'telah selesai',
+                'ditolak'  => 'ditolak',
+                default    => $data['status'],
+            };
+
+            Notifikasi::create([
+                'judul' => 'Status Laporan Diperbarui',
+                'pesan' => "Laporan \"{$laporan->judul}\" ({$kode}) {$labelStatus}.",
+                'tipe'  => 'status_berubah',
+                'link'  => "/laporan/{$laporan->id}",
+            ]);
         }
 
-        Laporan::create([
-            'nomor_laporan' => 'REP-' . str_pad(Laporan::count() + 1, 4, '0', STR_PAD_LEFT),
-            'user_id'       => auth()->id(),
-            'kategori_id'   => $request->kategori_id,
-            'judul'         => $request->judul,
-            'deskripsi'     => $request->deskripsi,
-            'lokasi'        => $request->lokasi,
-            'foto_bukti'    => $foto,
-            'status'        => 'pending',
-        ]);
-
-        return redirect()->route('laporan.index')->with('success', 'Laporan berhasil dikirim!');
-    }
-
-    public function updateStatus(Request $request, $id)
-    {
-        $laporan = Laporan::findOrFail($id);
-        $laporan->update([
-            'status'        => $request->status,
-            'petugas_id'    => $request->petugas_id,
-            'catatan_admin' => $request->catatan_admin,
-        ]);
-
-        return redirect()->back()->with('success', 'Status laporan diperbarui!');
-    }
-
-    public function exportPdf()
-    {
-        $laporans = Laporan::with(['user', 'kategori', 'petugas'])
-                        ->latest()
-                        ->get();
-
-        $pdf = Pdf::loadView('laporan.pdf', compact('laporans'))
-                  ->setPaper('a4', 'landscape');
-
-        return $pdf->download('laporan-' . date('d-m-Y') . '.pdf');
+        return back()->with('success', 'Laporan berhasil diperbarui.');
     }
 }
