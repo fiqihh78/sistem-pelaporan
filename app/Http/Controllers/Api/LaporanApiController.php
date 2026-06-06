@@ -44,35 +44,39 @@ class LaporanApiController extends Controller
         $user = $request->user();
         $kode = 'REP-' . strtoupper(Str::random(6));
 
-        // Upload foto
-        $fotoPath = null;
+        // Upload foto ke Cloudinary
+        $fotoUrl = null;
         if ($request->hasFile('foto_sebelum')) {
-            $file     = $request->file('foto_sebelum');
-            $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-            $fotoPath = $file->storeAs('laporan/foto', $filename, 'public');
+            $uploaded = cloudinary()->upload(
+                $request->file('foto_sebelum')->getRealPath(),
+                [
+                    'folder'    => 'silapor/laporan',
+                    'public_id' => 'laporan_' . time() . '_' . Str::random(6),
+                ]
+            );
+            $fotoUrl = $uploaded->getSecurePath();
         }
 
         $laporan = Laporan::create([
-            'kode'         => $kode,
-            'user_id'      => $user->id,
-            'pelapor'      => $user->name,
-            'kategori_id'  => $request->kategori_id,
-            'judul'        => $request->judul,
-            'deskripsi'    => $request->deskripsi,
-            'lokasi'       => $request->lokasi,
-            'foto_sebelum' => $fotoPath,
-            'status'       => 'pending',
-            'prioritas'    => 'medium',
-            'terverifikasi'=> false,
+            'kode'          => $kode,
+            'user_id'       => $user->id,
+            'pelapor'       => $user->name,
+            'kategori_id'   => $request->kategori_id,
+            'judul'         => $request->judul,
+            'deskripsi'     => $request->deskripsi,
+            'lokasi'        => $request->lokasi,
+            'foto_sebelum'  => $fotoUrl,  // URL Cloudinary
+            'status'        => 'pending',
+            'prioritas'     => 'medium',
+            'terverifikasi' => false,
         ]);
 
-        // Notifikasi untuk user
         Notifikasi::create([
-            'user_id'      => $user->id,
-            'judul'        => 'Laporan Terkirim',
-            'pesan'        => "Laporan \"{$laporan->judul}\" ({$kode}) berhasil dikirim.",
-            'tipe'         => 'laporan_baru',
-            'sudah_dibaca' => false,
+            'user_id' => $user->id,
+            'judul'   => 'Laporan Terkirim',
+            'pesan'   => "Laporan \"{$laporan->judul}\" ({$kode}) berhasil dikirim.",
+            'tipe'    => 'laporan_baru',
+            'dibaca'  => false,
         ]);
 
         return response()->json([
@@ -108,12 +112,9 @@ class LaporanApiController extends Controller
             'judul'         => $l->judul,
             'deskripsi'     => $l->deskripsi,
             'lokasi'        => $l->lokasi,
-            'foto_sebelum'  => $l->foto_sebelum
-                ? url('storage/' . $l->foto_sebelum)
-                : null,
-            'foto_sesudah'  => $l->foto_sesudah
-                ? url('storage/' . $l->foto_sesudah)
-                : null,
+            // URL Cloudinary langsung, tidak perlu prefix storage/
+            'foto_sebelum'  => $l->foto_sebelum,
+            'foto_sesudah'  => $l->foto_sesudah,
             'status'        => $l->status,
             'prioritas'     => $l->prioritas,
             'terverifikasi' => (bool) $l->terverifikasi,
