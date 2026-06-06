@@ -1,34 +1,45 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 
-class NotifikasiController extends Controller
+class NotifikasiApiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Admin lihat SEMUA notifikasi dari semua user
-        $notifikasis = Notifikasi::with('user')
+        $notifikasis = Notifikasi::where('user_id', $request->user()->id)
             ->latest()
-            ->paginate(20);
+            ->get()
+            ->map(fn($n) => [
+                'id'           => $n->id,
+                'judul'        => $n->judul,
+                'pesan'        => $n->pesan,
+                'tipe'         => $n->tipe ?? 'info',
+                'sudah_dibaca' => (bool) $n->dibaca,
+                'link'         => $n->link,
+                'created_at'   => $n->created_at?->toIso8601String(),
+            ]);
 
-        $belumDibaca = Notifikasi::where('sudah_dibaca', false)->count();
-
-        return view('notifikasi.index', compact('notifikasis', 'belumDibaca'));
+        return response()->json(['success' => true, 'notifikasis' => $notifikasis]);
     }
 
-    public function markAsRead($id)
+    public function tandaiSemua(Request $request)
     {
-        $notifikasi = Notifikasi::findOrFail($id);
-        $notifikasi->update(['sudah_dibaca' => true]);
-        return redirect()->back();
+        Notifikasi::where('user_id', $request->user()->id)
+            ->update(['dibaca' => true]);
+
+        return response()->json(['success' => true, 'message' => 'Semua notifikasi dibaca.']);
     }
 
-    public function markAllAsRead()
+    public function tandaiSatu(Request $request, $id)
     {
-        Notifikasi::update(['sudah_dibaca' => true]);
-        return redirect()->back()->with('success', 'Semua notifikasi telah dibaca!');
+        Notifikasi::where('user_id', $request->user()->id)
+            ->findOrFail($id)
+            ->update(['dibaca' => true]);
+
+        return response()->json(['success' => true, 'message' => 'Notifikasi ditandai dibaca.']);
     }
 }
