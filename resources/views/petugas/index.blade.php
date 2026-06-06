@@ -21,7 +21,7 @@
         </div>
         <div>
             <p class="text-xs text-gray-400">Total Petugas</p>
-            <p class="text-xl font-bold text-gray-800">{{ $petugas->total() }}</p>
+            <p class="text-xl font-bold text-gray-800">{{ $total }}</p>
         </div>
     </div>
     <div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
@@ -30,7 +30,7 @@
         </div>
         <div>
             <p class="text-xs text-gray-400">Petugas Aktif</p>
-            <p class="text-xl font-bold text-gray-800">{{ $petugas->where('status', 'aktif')->count() }}</p>
+            <p class="text-xl font-bold text-gray-800">{{ $aktif }}</p>
         </div>
     </div>
     <div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
@@ -39,10 +39,25 @@
         </div>
         <div>
             <p class="text-xs text-gray-400">Tidak Aktif</p>
-            <p class="text-xl font-bold text-gray-800">{{ $petugas->where('status', 'nonaktif')->count() }}</p>
+            <p class="text-xl font-bold text-gray-800">{{ $nonaktif }}</p>
         </div>
     </div>
 </div>
+
+{{-- Alert sukses --}}
+@if(session('success'))
+<div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
+    {{ session('success') }}
+</div>
+@endif
+
+@if($errors->any())
+<div class="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+    @foreach($errors->all() as $error)
+        <p>{{ $error }}</p>
+    @endforeach
+</div>
+@endif
 
 {{-- Tabel --}}
 <div class="bg-white rounded-xl shadow-sm p-5">
@@ -64,11 +79,11 @@
                 <td class="py-3">
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xs font-bold">
-                            {{ strtoupper(substr($p->user->name ?? 'P', 0, 1)) }}
+                            {{ strtoupper(substr($p->nama ?? 'P', 0, 1)) }}
                         </div>
                         <div>
-                            <p class="font-medium text-gray-800">{{ $p->user->name ?? '-' }}</p>
-                            <p class="text-xs text-gray-400">{{ $p->user->email ?? '-' }}</p>
+                            <p class="font-medium text-gray-800">{{ $p->nama ?? '-' }}</p>
+                            <p class="text-xs text-gray-400">{{ $p->email ?? '-' }}</p>
                         </div>
                     </div>
                 </td>
@@ -116,24 +131,35 @@
             @csrf
             <div>
                 <label class="text-sm text-gray-600">Nama Lengkap</label>
-                <input type="text" name="name" required
-                       class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <input type="text" name="nama" required autocomplete="off"
+                       class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                       placeholder="Contoh: Budi Santoso">
             </div>
             <div>
                 <label class="text-sm text-gray-600">Email</label>
-                <input type="email" name="email" required
-                       class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
-            </div>
-            <div>
-                <label class="text-sm text-gray-600">Password</label>
-                <input type="password" name="password" required
-                       class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <input type="email" name="email" required autocomplete="off"
+                       class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                       placeholder="Contoh: budi@dinas.go.id">
             </div>
             <div>
                 <label class="text-sm text-gray-600">Spesialisasi</label>
-                <input type="text" name="spesialisasi" required
-                       class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                       placeholder="Infrastruktur, Kebersihan, dll">
+                <select name="spesialisasi" required
+                        class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <option value="">-- Pilih Spesialisasi --</option>
+                    <option value="Infrastruktur">Infrastruktur</option>
+                    <option value="Kebersihan">Kebersihan</option>
+                    <option value="Lingkungan">Lingkungan</option>
+                    <option value="Keamanan">Keamanan</option>
+                    <option value="Penerangan Jalan">Penerangan Jalan</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm text-gray-600">Status</label>
+                <select name="status"
+                        class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                </select>
             </div>
             <button type="submit"
                     class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
