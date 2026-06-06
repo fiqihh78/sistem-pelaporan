@@ -8,10 +8,6 @@ use Illuminate\Http\Request;
 
 class VerifikasiController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
 
     public function index()
     {
@@ -34,7 +30,7 @@ class VerifikasiController extends Controller
 
         // Notifikasi: laporan terverifikasi → siap ditugaskan
         Notifikasi::create([
-            'judul' => 'Laporan Diverifikasi ✅',
+            'judul' => 'Laporan Diverifikasi',
             'pesan' => "Laporan \"{$laporan->judul}\" ({$kode}) telah diverifikasi dan siap untuk ditugaskan ke petugas.",
             'tipe'  => 'status_berubah',
             'link'  => "/laporan/{$laporan->id}",
@@ -51,7 +47,7 @@ class VerifikasiController extends Controller
 
         // Notifikasi: laporan ditolak
         Notifikasi::create([
-            'judul' => 'Laporan Ditolak ❌',
+            'judul' => 'Laporan Ditolak',
             'pesan' => "Laporan \"{$laporan->judul}\" ({$kode}) telah ditolak oleh admin.",
             'tipe'  => 'status_berubah',
             'link'  => "/laporan/{$laporan->id}",
