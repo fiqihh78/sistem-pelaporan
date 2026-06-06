@@ -48,7 +48,7 @@
                 </p>
                 <img src="{{ $laporan->foto_sebelum }}"
                      alt="Foto Laporan"
-                     class="rounded-lg max-h-64 object-cover w-full"
+                     class="rounded-lg w-full h-auto"
                      onerror="this.style.display='none'">
             </div>
             @endif
