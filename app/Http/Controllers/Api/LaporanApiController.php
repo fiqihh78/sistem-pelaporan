@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 
 class LaporanApiController extends Controller
 {
-    // Laporan milik user yang login
     public function index(Request $request)
     {
         $laporans = Laporan::with('kategori')
@@ -22,7 +21,6 @@ class LaporanApiController extends Controller
         return response()->json(['success' => true, 'laporans' => $laporans]);
     }
 
-    // Semua laporan dari semua warga (halaman publik Flutter)
     public function semuaLaporan()
     {
         $laporans = Laporan::with(['kategori', 'user'])
@@ -33,7 +31,6 @@ class LaporanApiController extends Controller
         return response()->json(['success' => true, 'laporans' => $laporans]);
     }
 
-    // Kirim laporan baru dari Flutter
     public function store(Request $request)
     {
         $request->validate([
@@ -44,13 +41,15 @@ class LaporanApiController extends Controller
             'foto_sebelum' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
-        $user     = $request->user();
-        $kode     = 'REP-' . strtoupper(Str::random(6));
-        $fotoPath = null;
+        $user = $request->user();
+        $kode = 'REP-' . strtoupper(Str::random(6));
 
+        // Upload foto
+        $fotoPath = null;
         if ($request->hasFile('foto_sebelum')) {
-            $fotoPath = $request->file('foto_sebelum')
-                ->store('laporan/foto', 'public');
+            $file     = $request->file('foto_sebelum');
+            $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $fotoPath = $file->storeAs('laporan/foto', $filename, 'public');
         }
 
         $laporan = Laporan::create([
@@ -67,11 +66,11 @@ class LaporanApiController extends Controller
             'terverifikasi'=> false,
         ]);
 
-        // Buat notifikasi untuk user
+        // Notifikasi untuk user
         Notifikasi::create([
             'user_id'      => $user->id,
             'judul'        => 'Laporan Terkirim',
-            'pesan'        => "Laporan \"{$laporan->judul}\" berhasil dikirim dan menunggu verifikasi.",
+            'pesan'        => "Laporan \"{$laporan->judul}\" ({$kode}) berhasil dikirim.",
             'tipe'         => 'laporan_baru',
             'sudah_dibaca' => false,
         ]);
@@ -83,7 +82,6 @@ class LaporanApiController extends Controller
         ], 201);
     }
 
-    // Detail satu laporan
     public function show(Request $request, $id)
     {
         $laporan = Laporan::with(['kategori', 'penugasan'])
@@ -96,20 +94,26 @@ class LaporanApiController extends Controller
         ]);
     }
 
-    // ── Helper format response ─────────────────────────────────────────
-    private function format(Laporan $l, bool $withUser = false, bool $withPenugasan = false): array
-    {
+    private function format(
+        Laporan $l,
+        bool $withUser = false,
+        bool $withPenugasan = false
+    ): array {
         $data = [
             'id'            => $l->id,
-            'kode'          => $l->kode,
+            'kode'          => $l->kode ?? 'REP-' . $l->id,
             'pelapor'       => $l->pelapor,
             'kategori_id'   => $l->kategori_id,
             'kategori'      => $l->kategori?->nama ?? '',
             'judul'         => $l->judul,
             'deskripsi'     => $l->deskripsi,
             'lokasi'        => $l->lokasi,
-            'foto_sebelum'  => $l->foto_sebelum ? asset('storage/' . $l->foto_sebelum) : null,
-            'foto_sesudah'  => $l->foto_sesudah ? asset('storage/' . $l->foto_sesudah) : null,
+            'foto_sebelum'  => $l->foto_sebelum
+                ? url('storage/' . $l->foto_sebelum)
+                : null,
+            'foto_sesudah'  => $l->foto_sesudah
+                ? url('storage/' . $l->foto_sesudah)
+                : null,
             'status'        => $l->status,
             'prioritas'     => $l->prioritas,
             'terverifikasi' => (bool) $l->terverifikasi,
